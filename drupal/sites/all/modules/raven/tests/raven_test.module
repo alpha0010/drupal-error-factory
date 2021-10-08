@@ -1,0 +1,81 @@
+<?php
+
+/**
+ * @file
+ * Raven test module.
+ */
+
+/**
+ * Implements hook_page_build().
+ */
+function raven_test_page_build(array &$page) {
+  $client = raven_get_client();
+  if (!$client) {
+    return;
+  }
+  $client->getOptions()->setBeforeSendCallback(function ($event) use (&$page) {
+    if (!empty($event->getLogger()) && !empty($event->getMessageFormatted())) {
+      $page['content']['#attached']['drupal_add_http_header'][] = [
+        $event->getLogger(),
+        $event->getMessageFormatted(),
+        FALSE,
+      ];
+      if (strpos($event->getLogger(), 'X-Watchdog') === 0) {
+        $frames = $event->getStacktrace()->getFrames();
+        $last_frame = end($frames);
+        $page['content']['#attached']['drupal_add_http_header'][] = [
+          $event->getLogger() . '-File',
+          $last_frame->getAbsoluteFilePath(),
+          FALSE,
+        ];
+      }
+      if (strpos($event->getLogger(), 'X-Watchdog') === 0) {
+        $frames = $event->getStacktrace()->getFrames();
+        $last_frame = end($frames);
+        $page['content']['#attached']['drupal_add_http_header'][] = [
+          $event->getLogger() . '-Function',
+          $last_frame->getFunctionName(),
+          FALSE,
+        ];
+      }
+    }
+    if (!empty($event->getExceptions())) {
+      if (preg_match('/Allowed memory size of ([0-9]+) bytes exhausted/', $event->getExceptions()[0]->getValue(), $matches)) {
+        echo $matches[1];
+      }
+    }
+    return NULL;
+  });
+  watchdog('X-Logged', 'Logged');
+  watchdog('X-Not-Logged', 'Not logged');
+  watchdog('X-Logged', 'Logged');
+  watchdog('X-Watchdog', 'This is a watchdog message.');
+  try {
+    raven_test_throw_exception();
+  }
+  catch (Exception $e) {
+    watchdog_exception('X-Watchdog-Exception', $e);
+  }
+  if (!empty($_GET['memory_limit'])) {
+    ini_set('memory_limit', (string) $_GET['memory_limit']);
+    while (TRUE) {
+      $page[] = 1;
+    }
+  }
+}
+
+/**
+ * Implements hook_raven_filter_alter().
+ */
+function raven_test_raven_watchdog_filter_alter(&$filter) {
+  if ($filter['log_entry']['type'] === 'X-Not-Logged') {
+    $filter['process'] = FALSE;
+  }
+}
+
+/**
+ * Throws an exception.
+ */
+function raven_test_throw_exception() {
+  throw new Exception('This exception will be caught.');
+}

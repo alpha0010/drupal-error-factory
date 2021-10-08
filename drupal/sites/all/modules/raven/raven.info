@@ -1,0 +1,16 @@
+name = "Raven: Sentry Integration"
+description = "Provides integration with Sentry, an application monitoring and error tracking platform."
+core = 7.x
+package = Development
+test_dependencies[] = composer_autoloader
+configure = admin/config/development/logging
+files[] = raven.test
+files[] = RavenSanitizeIntegration.php
+files[] = RavenRateLimitException.php
+php = 7.2
+
+; Information added by Drupal.org packaging script on 2021-10-04
+version = "7.x-4.10"
+core = "7.x"
+project = "raven"
+datestamp = "1633372160"

@@ -1,0 +1,16 @@
+{
+  "name": "drupal-raven",
+  "description": "Raven Drupal module",
+  "devDependencies": {
+    "@sentry/tracing": "^6.2.5"
+  },
+  "scripts": {
+    "postinstall": "cp node_modules/@sentry/tracing/build/bundle.tracing.min.* js/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git.drupal.org/project/raven.git"
+  },
+  "author": "mark burdett <mfb@eff.org>",
+  "license": "GPL-3.0"
+}

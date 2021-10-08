@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: ./web
+    volumes:
+      - ../drupal:/var/www/html
+    ports:
+      - '5678:80'
